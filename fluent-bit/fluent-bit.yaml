@@ -1,0 +1,104 @@
+service:
+  # set an interval of seconds before to flush records to a destination
+  flush: 1
+  # instruct Fluent Bit to run in foreground or background mode.
+  daemon: "Off"
+  # Set the verbosity level of the service, values can be:
+  #
+  # - error
+  # - warning
+  # - info
+  # - debug
+  # - trace
+  #
+  # by default 'info' is set, that means it includes 'error' and 'warning'.
+  log_level: "info"
+  # specify an optional 'Parsers' configuration file
+  parsers_file: "parsers.conf"
+  # specify an optional 'Plugins' configuration file to load external plugins.
+  plugins_file: "plugins.conf"
+
+  # Enable/Disable the built-in HTTP Server for metrics
+  http_server: "Off"
+  http_listen: "0.0.0.0"
+  http_port:   2020
+  # Fluent Bit can use memory and filesystem buffering based mechanisms
+  #
+  # - https://docs.fluentbit.io/manual/administration/buffering-and-storage
+  #
+  # storage metrics
+  # ---------------
+  # publish storage pipeline metrics in '/api/v1/storage'. The metrics are
+  # exported only if the 'http_server' option is enabled.
+  storage.metrics: "on"
+
+pipeline:
+  inputs:
+    - name:          "tail"
+      path:          "/var/log/nginx/access.log"
+      parser:        "json"
+      tag:           "nginx-access.log.local"
+      db:            "/var/log/nginx-access.db"
+      mem_buf_limit: "5mb"
+
+      # wrap logs into opentelemetry format
+      processors:
+        logs:
+          - name: "opentelemetry_envelope"
+          # We can override severity directly but otherwise priority: severity -> Severitytext -> SeverityNumber
+          #- name: "content_modifier"
+          #  context: "body"
+          #  action: "insert"
+          #  key: "SeverityNumber"
+          #  value: "9"
+          - name: "content_modifier"
+            context: "attributes"
+            action: "insert"
+            key: "severity"
+            value: "Info"
+          - name: "content_modifier"
+            context: "attributes"
+            action: "insert"
+            key: "event_name"
+            value: "NginxAccess"
+
+    - name:            "node_exporter_metrics"
+      tag:             "system.metric.local"
+      scrape_interval: 5
+      metrics:         "cpu,meminfo,diskstats"
+  outputs:
+    # Output logs to openobserve's API endpoint
+    #- name:             "http"
+    #  match:            "*.log.local"
+    #  uri:              "/_observe/api/default/fluentbit/_json"
+    #  host:             "127.0.0.1"
+    #  port:             "45080"
+    #  tls:              "off"
+    #  format:           "json"
+    #  Json_date_key:    "_timestamp"
+    #  Json_date_format: "iso8601"
+    #  HTTP_User:        "<user name>"
+    #  HTTP_Passwd:      "<password>"
+    #  compress:         "gzip"
+    # Output everything via opentelemetry
+    - name:         "opentelemetry"
+      #Match:       "*.metric.local"
+      Match:        "*"
+      Host:         "127.0.0.1"
+      # HTTP port
+      #Port:         "45080"
+      # GRPC port
+      Port:         "45081"
+      # If you use GRPC locally, you do not need TLS, but otherwise enable it
+      Grpc:         true
+      Tls:          "Off"
+      Compress:     "gzip"
+      #REST API only
+      #Metrics_uri: "/_observe/api/default/v1/metrics"
+      #Logs_uri:    "/_observe/api/default/v1/logs"
+      #Traces_uri:  "/_observe/api/default/v1/traces"
+
+      header:
+        - Authorization Basic <token>
+        - organization default
+        - stream-name fluentbit
