@@ -44,6 +44,14 @@ pipeline:
       # wrap logs into opentelemetry format
       processors:
         logs:
+          # Append country code to all nginx access logs
+          # You can find database here: https://github.com/DoumanAsh/maxmind-db/releases/tag/latest
+          - name:       "geoip2"
+            match:      "nginx-access.log.local"
+            database:   "/opt/geolite2/GeoLite2-Country.mmdb"
+            lookup_key: "remote_addr"
+            record:
+              - country remote_addr %{country.iso_code}
           - name: "opentelemetry_envelope"
           # We can override severity directly but otherwise priority: severity -> Severitytext -> SeverityNumber
           #- name: "content_modifier"
