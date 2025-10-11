@@ -34,6 +34,27 @@ service:
 
 pipeline:
   inputs:
+    - name:   "syslog"
+      mode:   "udp"
+      port:   51400
+      tag:    "syslog.log.local"
+      # Tools like nginx would use rfc3164 format
+      # And it is anyway more than enough
+      parser: "syslog-rfc3164-local"
+      processors:
+        logs:
+          - name:    "content_modifier"
+            context: "attributes"
+            action:  "insert"
+            key:     "event_name"
+            value:   "Syslog"
+          - name:    "content_modifier"
+            context: "attributes"
+            action:  "insert"
+            key:     "body_kind"
+            value:   "syslog"
+          - name:    "opentelemetry_envelope"
+
     - name:          "tail"
       path:          "/var/log/nginx/access.log"
       parser:        "json"
@@ -59,16 +80,16 @@ pipeline:
           #  action: "insert"
           #  key: "SeverityNumber"
           #  value: "9"
-          - name: "content_modifier"
+          - name:    "content_modifier"
             context: "attributes"
-            action: "insert"
-            key: "severity"
-            value: "Info"
-          - name: "content_modifier"
+            action:  "insert"
+            key:     "severity"
+            value:   "Info"
+          - name:    "content_modifier"
             context: "attributes"
-            action: "insert"
-            key: "event_name"
-            value: "NginxAccess"
+            action:  "insert"
+            key:     "event_name"
+            value:   "NginxAccess"
 
     - name:            "node_exporter_metrics"
       tag:             "system.metric.local"
