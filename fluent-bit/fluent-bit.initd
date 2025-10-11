@@ -1,6 +1,6 @@
 #!/sbin/openrc-run
 
-: ${cfgfile:="/etc/fluent-bit/fluent-bit.conf"}
+: ${cfgfile:="/etc/fluent-bit/fluent-bit.yaml"}
 
 name=fluent-bit
 command="/usr/bin/fluent-bit"
