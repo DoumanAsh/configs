@@ -43,11 +43,21 @@ pipeline:
       parser: "syslog-rfc3164-local"
       processors:
         logs:
+          # extract severity/facility and drop facility
+          - name:    "lua"
+            script:  "fluent-bit.lua"
+            call:    "pri_extractor"
+          - name:    "content_modifier"
+            context: "attributes"
+            action:  "delete"
+            key:     "facility"
+          # add event_name to identify syslog events
           - name:    "content_modifier"
             context: "attributes"
             action:  "insert"
             key:     "event_name"
             value:   "Syslog"
+          # add body_kind for consistency with other logs
           - name:    "content_modifier"
             context: "attributes"
             action:  "insert"
