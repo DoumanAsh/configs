@@ -21,9 +21,9 @@ export ZO_MMDB_DISABLE_DOWNLOAD="true"
 # general APIs and web
 export ZO_HTTP_PORT=45080
 export ZO_GRPC_PORT=45081
-# syslog ports
-export ZO_TCP_PORT=45514
-export ZO_UDP_PORT=45514
+# syslog ports (will be deprecated eventually, and you can just use fluent-bit anyway)
+#export ZO_TCP_PORT=45514
+#export ZO_UDP_PORT=45514
 
 export ZO_WEB_URL="http://localhost:$ZO_HTTP_PORT"
 export ZO_BASE_URI="/_observe"
