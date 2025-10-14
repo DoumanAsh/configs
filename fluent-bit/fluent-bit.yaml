@@ -104,7 +104,7 @@ pipeline:
     - name:            "node_exporter_metrics"
       tag:             "system.metric.local"
       scrape_interval: 5
-      metrics:         "cpu,meminfo,diskstats"
+      metrics:         "cpu,meminfo,diskstats,netdev"
   outputs:
     # Output logs to openobserve's API endpoint
     #- name:             "http"
