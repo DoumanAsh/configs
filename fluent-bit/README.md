@@ -5,7 +5,8 @@
 [fluent-bit.initd](./fluent-bit.initd) can be placed in `/etc/init.d` to be used as service:
 
 ```
-sudo chmod +x /etc/init.d/fluent-bit.initd
+sudo cp ./fluent-bit.initd /etc/init.d/fluent-bit
+sudo chmod +x /etc/init.d/fluent-bit
 sudo rc-update add fluent-bit default
 sudo rc-service fluent-bit start
 ```

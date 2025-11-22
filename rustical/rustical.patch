@@ -1,0 +1,23 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 2c4851b..dba7045 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -146,7 +146,7 @@ vtimezones-rs = "0.2"
+ ece = { version = "2.3", default-features = false, features = [
+   "backend-openssl",
+ ] }
+-openssl = { version = "0.10", features = ["vendored"] }
++openssl = { version = "0.10" }
+ async-std = { version = "1.13", features = ["attributes"] }
+
+ [dependencies]
+@@ -196,3 +196,9 @@ tower-http.workspace = true
+ axum-extra.workspace = true
+ headers.workspace = true
+ http.workspace = true
++
++[profile.release]
++lto = 'thin'
++debug = false
++strip = true
++codegen-units = 1

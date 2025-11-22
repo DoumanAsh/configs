@@ -1,0 +1,15 @@
+#!/sbin/openrc-run
+
+: ${command_user:="rustical:www-data"}
+: ${cfgfile:="/etc/rustical/config.toml"}
+
+name=rustical
+command="/usr/bin/rustical"
+command_args="-c $cfgfile $rustical_opts"
+command_background="yes"
+pidfile="/run/rustical.pid"
+
+depend() {
+        need net
+        after firewall
+}
