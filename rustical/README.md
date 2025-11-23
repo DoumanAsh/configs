@@ -23,4 +23,5 @@ sudo rc-service rustical start
 
 ## Setup
 
-Create user account (run under sufficient privileges): `rustical principals create -p individual -n $DISPLAY_NAME --pasword $USER_ACCOUNT_ID`
+- Create system user: `sudo adduser -D -k /etc/rustical -h /var/lib/rustical -G www-data rustical`
+- Create user account (run under sufficient privileges): `rustical principals create -p individual -n $DISPLAY_NAME --pasword $USER_ACCOUNT_PASSWORD`
