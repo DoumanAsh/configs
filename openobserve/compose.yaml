@@ -1,0 +1,25 @@
+services:
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    ports:
+      - 45080:45080
+      - 45081:45081
+    volumes:
+      - openobserve-data:/data
+    environment:
+      - ZO_TELEMETRY=false
+      - ZO_LOCAL_MODE=true
+      - ZO_MAX_FILE_SIZE_IN_MEMORY=128
+      - ZO_MAX_FILE_RETENTION_TIME=600
+      - ZO_COMPACT_DATA_RETENTION_DAYS=7
+      - ZO_TELEMETRY=false
+      - RUST_LOG=warn
+      - ZO_HTTP_PORT=45080
+      - ZO_GRPC_PORT=45081
+      - ZO_DATA_DIR=/data
+      - ZO_ROOT_USER_EMAIL=root@email.com
+      # Probably don't store password when you actually use it for anything beyond just local development
+      - ZO_ROOT_USER_PASSWORD=1
+
+volumes:
+  openobserve-data:
