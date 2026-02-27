@@ -1,0 +1,215 @@
+service:
+  # set an interval of seconds before to flush records to a destination
+  flush: 1
+  # instruct Fluent Bit to run in foreground or background mode.
+  daemon: "Off"
+  # Set the verbosity level of the service, values can be:
+  #
+  # - error
+  # - warning
+  # - info
+  # - debug
+  # - trace
+  #
+  # by default 'info' is set, that means it includes 'error' and 'warning'.
+  log_level: "info"
+  # specify an optional 'Parsers' configuration file
+  parsers_file: "parsers.conf"
+  # specify an optional 'Plugins' configuration file to load external plugins.
+  plugins_file: "plugins.conf"
+
+  # Enable/Disable the built-in HTTP Server for metrics
+  http_server: "Off"
+  http_listen: "0.0.0.0"
+  http_port:   2020
+  # Fluent Bit can use memory and filesystem buffering based mechanisms
+  #
+  # - https://docs.fluentbit.io/manual/administration/buffering-and-storage
+  #
+  # storage metrics
+  # ---------------
+  # publish storage pipeline metrics in '/api/v1/storage'. The metrics are
+  # exported only if the 'http_server' option is enabled.
+  storage.metrics: "on"
+
+pipeline:
+  inputs:
+    - name:              "systemd"
+      tag:               "journald.log"
+      strip_underscores: true
+      read_from_tail:    true
+      processors:
+        logs:
+          # Clean up
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "INVOCATION_ID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SELINUX_CONTEXT"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "UNIT"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "CAP_EFFECTIVE"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "USER_INVOCATION_ID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSTEMD_INVOCATION_ID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "STREAM_ID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "USER_UNIT"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSTEMD_USER_UNIT"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSTEMD_USER_SLICE"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSTEMD_SLICE"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "UID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "GID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSTEMD_CGROUP"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "ERRNO"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSLOG_RAW"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSLOG_PID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSLOG_IDENTIFIER"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSLOG_TIMESTAMP"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSLOG_FACILITY"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "DOCUMENTATION"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "AUDIT_SESSION"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "AUDIT_LOGINUID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "AUDIT_LOGINUID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSTEMD_SESSION"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SYSTEMD_OWNER_UID"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SOURCE_REALTIME_TIMESTAMP"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SOURCE_BOOTTIME_TIMESTAMP"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "LINE_BREAK"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "NAMESPACE"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "RUNTIME_SCOPE"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "CURSOR"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "MONOTONIC_TIMESTAMP"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SEQNUM"
+          - name: content_modifier
+            context: body
+            action: delete
+            key: "SEQNUM_ID"
+
+          - name:   "lua"
+            script: "fluent-bit.lua"
+            call:   "systemd_extractor"
+          - name:   "opentelemetry_envelope"
+
+          # Finalize
+          - name: content_modifier
+            context: otel_scope_name
+            action: insert
+            name: "name"
+            value: "journald"
+
+  outputs:
+    - name: stdout
+      format: json_lines
+      match: "*"
+    - name:         "opentelemetry"
+      Match:        "*"
+      Host:         "roseline.servebeer.com"
+      Port:         "443"
+      Grpc:         false
+      Tls:          "On"
+      Compress:     "gzip"
+      Metrics_uri:  "/_observe/api/default/v1/metrics"
+      Logs_uri:     "/_observe/api/default/v1/logs"
+      Traces_uri:   "/_observe/api/default/v1/traces"
+
+      header:
+        - Authorization Basic <token>
+        - organization default
+        - stream-name pc
