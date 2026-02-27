@@ -1,6 +1,6 @@
 service:
   # set an interval of seconds before to flush records to a destination
-  flush: 1
+  flush: 5
   # instruct Fluent Bit to run in foreground or background mode.
   daemon: "Off"
   # Set the verbosity level of the service, values can be:
