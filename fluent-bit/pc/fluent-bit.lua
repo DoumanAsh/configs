@@ -1,7 +1,12 @@
 function systemd_extractor(tag, timestamp, group, metadata, record)
     -- Maps PRIORITY to number and text
-    priority = tonumber(record["PRIORITY"])
-    record["PRIORITY"] = nil
+    local priority = record["PRIORITY"]
+    if priority == nil then
+        priority = 6
+    else
+        priority = tonumber(priority)
+        record["PRIORITY"] = nil
+    end
 
     local level_map = {
 	    [0] = 24,

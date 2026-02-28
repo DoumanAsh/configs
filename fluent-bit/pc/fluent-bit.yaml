@@ -211,5 +211,4 @@ pipeline:
 
       header:
         - Authorization Basic <token>
-        - organization default
         - stream-name pc
