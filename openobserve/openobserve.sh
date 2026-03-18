@@ -6,6 +6,7 @@ echo "SCRIPT_DIR=$SCRIPT_DIR"
 
 export ZO_ROOT_USER_EMAIL="<your email>"
 export ZO_ROOT_USER_PASSWORD="<your password>"
+export ZO_ROOT_USER_TOKEN="<your ingestion API token>"
 export ZO_DATA_DIR="$SCRIPT_DIR/data"
 export ZO_LOCAL_MODE="true"
 

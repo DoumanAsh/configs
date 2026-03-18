@@ -20,6 +20,9 @@ services:
       - ZO_ROOT_USER_EMAIL=root@email.com
       # Probably don't store password when you actually use it for anything beyond just local development
       - ZO_ROOT_USER_PASSWORD=1
+      # Auth token is encoded as base64 of <email>:<token>
+      # cm9vdEBlbWFpbC5jb206MQ==
+      - ZO_ROOT_USER_TOKEN=1
 
 volumes:
   openobserve-data:
