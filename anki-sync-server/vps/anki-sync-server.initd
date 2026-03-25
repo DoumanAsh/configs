@@ -1,0 +1,17 @@
+#!/sbin/openrc-run
+
+export SYNC_PORT=40800
+export SYNC_BASE="/anki-sync"
+export SYNC_IP_HEADER="XRealIp"
+# You need to setup initial user account
+#export SYNC_USER1="<username>:<password>"
+
+name=anki-sync-server
+command="/usr/local/bin/anki-sync-server"
+command_background="no"
+pidfile="/run/anki-sync-server.pid"
+
+depend() {
+        need net
+        after firewall
+}
