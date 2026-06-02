@@ -1,10 +1,11 @@
 #!/sbin/openrc-run
 
 : ${cfgfile:="/etc/fluent-bit/fluent-bit.yaml"}
+: ${logfile:="/var/log/fluent-bit.log"}
 
 name=fluent-bit
 command="/usr/bin/fluent-bit"
-command_args="-c $cfgfile $fluentbit_opts"
+command_args="-c $cfgfile -l $logfile $fluentbit_opts"
 command_background="yes"
 pidfile="/run/fluent-bit.pid"
 

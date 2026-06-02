@@ -77,6 +77,10 @@ sudo rc-update add fluent-bit default
 sudo rc-service fluent-bit start
 ```
 
+### Log rotation
+
+[fluent-bit.logrotate](./vps/fluent-bit.logrotate) can be placed in `/etc/logrotate.d` to enable log rotation
+
 ### Lua functions
 
 [fluent-bit.lua](./vps/fluent-bit.lua) contains useful functions:

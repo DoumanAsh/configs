@@ -1,0 +1,14 @@
+/var/log/fluent-bit*.log {
+    notifempty
+    missingok
+    daily
+    rotate 3
+    copytruncate
+    compress
+    postrotate
+        if [ -f /run/fluent-bit.pid ]; then
+            rc-service fluent-bit stop
+            rc-service fluent-bit start
+        fi
+    endscript
+}
