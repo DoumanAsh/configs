@@ -27,4 +27,3 @@
       ansible.builtin.debug:
         msg: "SSH Status: {{ ansible_facts.services['sshd.service']['state'] }}"
       when: "'sshd.service' in ansible_facts.services"
-

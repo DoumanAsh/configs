@@ -25,6 +25,7 @@
         mode: u=r,g=r,o=r
     - name: 4. Transfer fluent-bit lua extension
       become: true
+      register: fluent_bit_lua
       ansible.builtin.copy:
         src: ../../fluent-bit/vps/fluent-bit.lua
         dest: /etc/fluent-bit/
@@ -33,10 +34,17 @@
         mode: u=r,g=r,o=r
     - name: 5. Transfer fluent-bit config
       become: true
+      register: fluent_bit_config
       ansible.builtin.template:
         src: ../../fluent-bit/vps/fluent-bit.yaml
         dest: /etc/fluent-bit/
         owner: root
         group: root
         mode: u=r,g=r,o=r
-
+    - name: 6. Restart fluent-bit service if configs changed
+      become: true
+      when: fluent_bit_config['changed'] or fluent_bit_lua['changed']
+      ansible.builtin.service:
+        name: fluent-bit
+        runlevel: default
+        state: restarted
