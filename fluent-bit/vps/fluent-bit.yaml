@@ -121,6 +121,7 @@ pipeline:
     #  compress:         "gzip"
     # Output everything via opentelemetry
     - name:         "opentelemetry"
+      log_level:    "warn"
       #Match:       "*.metric.local"
       Match:        "*"
       Host:         "127.0.0.1"
