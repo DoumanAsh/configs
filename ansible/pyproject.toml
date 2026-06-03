@@ -1,0 +1,7 @@
+[project]
+name = "vps-anisble"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "ansible>=14.0.0",
+]

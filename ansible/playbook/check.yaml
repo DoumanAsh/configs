@@ -1,0 +1,30 @@
+- name: Check Machine State and Gather Facts
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: 1. Check if the machine is reachable
+      ansible.builtin.ping:
+
+    - name: 2. Get active service states
+      ansible.builtin.service_facts:
+
+    - name: 4. Basic server info
+      ansible.builtin.debug:
+        msg:
+          - "OS: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }} {{ ansible_facts['architecture'] }}"
+          - "Kernel: {{ ansible_facts['kernel'] }}"
+          - "Total Memory: {{ ansible_facts['memtotal_mb'] }} MB"
+          - "CPU Count: {{ ansible_facts['processor_count'] }}"
+          - "Python version: {{ ansible_facts['python_version'] }}"
+
+    - name: 5. Enumerate disks
+      ansible.builtin.debug:
+        msg: "{{ item.mount }}: {{ (item.size_available / 1024 / 1024 / 1024) | round(2) }} GB / {{ (item.size_total / 1024 / 1024 / 1024) | round(2) }} GB"
+      loop: "{{ ansible_facts['mounts'] }}"
+
+    - name: 6. SSH state
+      ansible.builtin.debug:
+        msg: "SSH Status: {{ ansible_facts.services['sshd.service']['state'] }}"
+      when: "'sshd.service' in ansible_facts.services"
+

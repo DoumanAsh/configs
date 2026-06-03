@@ -1,0 +1,42 @@
+- name: Upload fluent-bit config
+  hosts: vps
+  gather_facts: false
+  vars_files:
+    - ../vars/opennobserve.yaml
+
+  tasks:
+    - name: 1. Check if the machine is reachable
+      ansible.builtin.ping:
+    - name: 2. Transfer init.d fluent-bit
+      become: true
+      ansible.builtin.copy:
+        src: ../../fluent-bit/vps/fluent-bit.initd
+        dest: /etc/init.d/fluent-bit
+        owner: root
+        group: root
+        mode: u=rx,g=rx,o=rx
+    - name: 3. Transfer logrotate fluent-bit
+      become: true
+      ansible.builtin.copy:
+        src: ../../fluent-bit/vps/fluent-bit.logrotate
+        dest: /etc/logrotate.d/fluent-bit
+        owner: root
+        group: root
+        mode: u=r,g=r,o=r
+    - name: 4. Transfer fluent-bit lua extension
+      become: true
+      ansible.builtin.copy:
+        src: ../../fluent-bit/vps/fluent-bit.lua
+        dest: /etc/fluent-bit/
+        owner: root
+        group: root
+        mode: u=r,g=r,o=r
+    - name: 5. Transfer fluent-bit config
+      become: true
+      ansible.builtin.template:
+        src: ../../fluent-bit/vps/fluent-bit.yaml
+        dest: /etc/fluent-bit/
+        owner: root
+        group: root
+        mode: u=r,g=r,o=r
+

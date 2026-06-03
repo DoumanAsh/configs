@@ -138,6 +138,6 @@ pipeline:
       #Traces_uri:  "/_observe/api/default/v1/traces"
 
       header:
-        - Authorization Basic <token>
+        - Authorization Basic {{ openobserve.token }}
         - organization default
         - stream-name fluentbit
