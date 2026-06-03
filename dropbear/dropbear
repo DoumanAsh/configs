@@ -3,4 +3,5 @@
 # see `dropbear -h` for more information
 # -w disables root logins
 # -p # changes the port number to listen on
-DROPBEAR_OPTS="-w"
+# -T # Maximum authentication tries (default 10)
+DROPBEAR_OPTS="-w -T 3"

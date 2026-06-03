@@ -1,0 +1,15 @@
+- name: Prepare ssh config
+  hosts: vps
+  gather_facts: false
+
+  tasks:
+    - name: 1. Check if the machine is reachable
+      ansible.builtin.ping:
+    - name: 2. Transfer dropbear config
+      become: true
+      ansible.builtin.copy:
+        src: ../../dropbear/dropbear
+        dest: /etc/conf.d/dropbear
+        owner: root
+        group: root
+        mode: u=r,g=r,o=r
