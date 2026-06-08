@@ -1,0 +1,11 @@
+#!/sbin/openrc-run
+
+name=tcpbin
+command="/usr/local/bin/tcpbin"
+command_background="yes"
+pidfile="/run/tcpbin.pid"
+
+depend() {
+        need net
+        after firewall
+}

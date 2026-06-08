@@ -1,0 +1,39 @@
+- name: Install tcpbin
+  hosts: vps
+  gather_facts: false
+
+  tasks:
+    - name: 1. Check if the machine is reachable
+      ansible.builtin.ping:
+    - name: 2. Install unzip
+      become: true
+      ansible.builtin.package:
+        name: unzip
+        state: present
+    - name: 3 Transfer init.d tcpbin
+      become: true
+      ansible.builtin.copy:
+        src: ../../tcpbin/vps/tcpbin.initd
+        dest: /etc/init.d/tcpbin
+        owner: root
+        group: root
+        mode: u=rx,g=rx,o=rx
+    - name: 4. Upload tcpbin
+      become: true
+      register: tcpbin_binary_upload
+      ansible.builtin.unarchive:
+        src: https://github.com/DoumanAsh/tcpbin/releases/download/0.1.2/tcpbin-x86_64-unknown-linux-musl.zip
+        remote_src: true
+        owner: root
+        group: root
+        mode: u=rx,g=rx,o=rx
+        dest: /usr/local/bin/
+        creates: /usr/local/bin/tcpbin
+    - name: 5. Restart tcpbin service if binary changed
+      become: true
+      when: tcpbin_binary_upload['changed']
+      ansible.builtin.service:
+        name: tcpbin
+        enabled: true
+        runlevel: default
+        state: restarted
