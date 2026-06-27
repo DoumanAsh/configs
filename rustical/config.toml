@@ -5,7 +5,7 @@ db_url = "/var/lib/rustical/db.sqlite3"
 enabled = true
 
 [frontend]
-allow_password_login = false
+allow_password_login = true
 enabled = true
 
 [http]

@@ -1,0 +1,41 @@
+- name: Upload rustical config
+  hosts: vps
+  gather_facts: false
+
+  tasks:
+    - name: 1. Check if the machine is reachable
+      ansible.builtin.ping:
+    - name: 2. Transfer rustical binary
+      become: true
+      ignore_errors: true
+      ansible.builtin.copy:
+        src: ../../rustical/rustical
+        dest: /usr/bin/rustical
+        owner: root
+        group: root
+        mode: u=rx,g=rx,o=rx
+    - name: 3. Transfer init.d rustical
+      become: true
+      ansible.builtin.copy:
+        src: ../../rustical/rustical.initd
+        dest: /etc/init.d/rustical
+        owner: root
+        group: root
+        mode: u=rx,g=rx,o=rx
+    - name: 4. Transfer rustical config
+      become: true
+      register: rustical_config
+      ansible.builtin.copy:
+        src: ../../rustical/config.toml
+        dest: /etc/rustical/config.toml
+        owner: root
+        group: root
+        mode: u=r,g=r,o=r
+    - name: 5. Restart rustical service if config changed
+      become: true
+      when: rustical_config['changed']
+      ansible.builtin.service:
+        name: rustical
+        runlevel: default
+        state: restarted
+
