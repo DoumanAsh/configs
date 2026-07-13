@@ -16,3 +16,6 @@ enabled = false
 
 [tracing]
 opentelemetry = false
+
+[maintenance]
+trash_retention_days = 7
