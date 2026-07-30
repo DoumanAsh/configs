@@ -3,25 +3,26 @@
     is_become: false
     user: root
     dest_folder: "."
-  become: "{{is_become}}"
+  become: "{{ is_become }}"
   block:
-    - name: "Create '{{dest_folder}}' directory"
+    - name: "Create directory '{{ dest_folder }}'"
       ansible.builtin.file:
-        path: "{{dest_folder}}"
+        path: "{{ dest_folder }}"
         state: directory
-        owner: "{{user}}"
-        group: "{{user}}"
-    - name: "Download maxmind-updater AS {{ [ dest_folder, 'maxmind-db-updater.py'] | path_join}}"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: u=rwx,g=rx,o=rx
+    - name: "Download maxmind-updater AS {{ [dest_folder, 'maxmind-db-updater.py'] | path_join }}"
       become: true
       ansible.builtin.get_url:
         url: "https://raw.githubusercontent.com/DoumanAsh/maxmind-db/refs/heads/master/updater/maxmind-db-updater.py"
-        dest: "{{ [ dest_folder, 'maxmind-db-updater.py'] | path_join}}"
+        dest: "{{ [dest_folder, 'maxmind-db-updater.py'] | path_join }}"
         force: false
-        owner: "{{user}}"
-        group: "{{user}}"
+        owner: "{{ user }}"
+        group: "{{ user }}"
         mode: u=rwx,g=rx,o=rx
-    - name: "Execute {{ [ dest_folder, 'maxmind-db-updater.py'] | path_join}}"
+    - name: "Execute {{ [dest_folder, 'maxmind-db-updater.py'] | path_join }}"
       become: true
       ansible.builtin.command:
-        cmd: "{{ [ dest_folder, 'maxmind-db-updater.py'] | path_join}} --country"
-        creates: "{{ [ dest_folder, 'GeoLite2-Country.mmdb'] | path_join}}"
+        cmd: "{{ [dest_folder, 'maxmind-db-updater.py'] | path_join }} --country"
+        creates: "{{ [dest_folder, 'GeoLite2-Country.mmdb'] | path_join }}"

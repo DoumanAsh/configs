@@ -16,6 +16,7 @@
         state: directory
         owner: root
         group: root
+        mode: u=rwx,g=rx,o=rx
     - name: 2.1 Setup geolite2
       block:
         - name: "Task maxmind-updater"
@@ -31,6 +32,7 @@
         state: directory
         owner: root
         group: root
+        mode: u=rwx,g=rx,o=rx
     - name: 4. Transfer vector.yaml
       become: true
       register: vector_config
@@ -58,17 +60,17 @@
         owner: root
         group: root
         mode: u=rw,g=r,o=r
-    # ansible's builtin archiver doesn't support non-GNU tar utilities
     - name: 5. Download Vector tar.gz
       ansible.builtin.get_url:
-        url: "https://github.com/vectordotdev/vector/releases/download/v{{vector_version}}/vector-{{vector_version}}-x86_64-unknown-linux-musl.tar.gz"
-        dest: "/tmp/vector-{{vector_version}}-x86_64-unknown-linux-musl.tar.gz"
+        url: "https://github.com/vectordotdev/vector/releases/download/v{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
+        dest: "/tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
         checksum: "sha256:b04fafcffcbeb3d43cbba587583dbe3338b24dd34256b3967fb15d137aff75f2"
         mode: u=rw,g=r,o=r
+    # ansible's builtin archiver doesn't support non-GNU tar utilities so we use raw tar on Alpine
     - name: 6. Extract vector binary
       become: true
       ansible.builtin.command:
-        cmd: tar -xzf /tmp/vector-{{vector_version}}-x86_64-unknown-linux-musl.tar.gz --strip-components=3 -C /usr/local/bin ./vector-x86_64-unknown-linux-musl/bin/vector
+        cmd: "tar -xzf /tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz --strip-components=3 -C /usr/local/bin ./vector-x86_64-unknown-linux-musl/bin/vector" # noqa: command-instead-of-module
         creates: /usr/local/bin/vector
     - name: 7. Set vector bin permissions
       become: true

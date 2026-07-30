@@ -29,9 +29,11 @@
         mode: u=rx,g=rx,o=rx
         dest: /usr/local/bin/
         creates: /usr/local/bin/tcpbin
-    - name: 5. Restart tcpbin service if binary changed
+      notify:
+        - Restart tcpbin service
+  handlers:
+    - name: Restart tcpbin service
       become: true
-      when: tcpbin_binary_upload['changed']
       ansible.builtin.service:
         name: tcpbin
         enabled: true
