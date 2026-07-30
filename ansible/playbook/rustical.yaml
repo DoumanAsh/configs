@@ -38,4 +38,3 @@
         name: rustical
         runlevel: default
         state: restarted
-

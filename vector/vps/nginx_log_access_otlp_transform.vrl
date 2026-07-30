@@ -1,0 +1,35 @@
+payload = object!(parse_json!(.))
+real_timestamp = parse_timestamp!(payload.timestamp, format: "%Y-%m-%dT%H:%M:%S%:z")
+del(payload.timestamp)
+
+geoip, err = get_enrichment_table_record("GeoIP2-Country", { "ip":  payload.remote_addr })
+if err == null {
+    payload.country = geoip.country.iso_code
+}
+
+attributes = []
+for_each(payload) -> |key, value| {
+    value = if is_integer(value) { { "intValue": value } } else if is_float(value) { { "doubleValue": value } } else { { "stringValue": to_string!(value) } }
+    attributes = append(attributes, [{ "key": key, "value": value }])
+}
+
+.resourceLogs = [{
+    "resource": {
+        "attributes": [
+            { "key": "service.name", "value": { "stringValue": "nginx" } },
+            { "key": "source_type", "value": { "stringValue": "nginx_log_access" } },
+        ]
+    },
+    "scopeLogs": [{
+        "scope": {
+            "name": "nginx"
+        },
+        "logRecords": [{
+            "timeUnixNano": to_unix_timestamp(real_timestamp, unit: "nanoseconds"),
+            "body": { "stringValue": "Access" },
+            "severityText": "Info",
+            "eventName": "NginxAccess",
+            "attributes": attributes
+        }]
+    }]
+}]

@@ -16,6 +16,14 @@
         state: directory
         owner: root
         group: root
+    - name: 2.1 Setup geolite2
+      block:
+        - name: "Task maxmind-updater"
+          ansible.builtin.include_tasks: ../tasks/maxmind-updater.yaml
+          vars:
+            is_become: true
+            user: root
+            dest_folder: "/opt/geolite2"
     - name: 3. Create vector data directory
       become: true
       ansible.builtin.file:
@@ -32,12 +40,31 @@
         owner: root
         group: root
         mode: u=rw,g=r,o=r
+    - name: 4.1 Transfer syslog_otlp_transform.vrl
+      become: true
+      register: vector_config_syslog_otlp_transform
+      ansible.builtin.copy:
+        src: ../../vector/vps/syslog_otlp_transform.vrl
+        dest: /etc/vector/syslog_otlp_transform.vrl
+        owner: root
+        group: root
+        mode: u=rw,g=r,o=r
+    - name: 4.2 Transfer nginx_log_access_otlp_transform.vrl
+      become: true
+      register: vector_config_nginx_log_access_otlp_transform
+      ansible.builtin.copy:
+        src: ../../vector/vps/nginx_log_access_otlp_transform.vrl
+        dest: /etc/vector/nginx_log_access_otlp_transform.vrl
+        owner: root
+        group: root
+        mode: u=rw,g=r,o=r
     # ansible's builtin archiver doesn't support non-GNU tar utilities
     - name: 5. Download Vector tar.gz
       ansible.builtin.get_url:
         url: "https://github.com/vectordotdev/vector/releases/download/v{{vector_version}}/vector-{{vector_version}}-x86_64-unknown-linux-musl.tar.gz"
         dest: "/tmp/vector-{{vector_version}}-x86_64-unknown-linux-musl.tar.gz"
         checksum: "sha256:b04fafcffcbeb3d43cbba587583dbe3338b24dd34256b3967fb15d137aff75f2"
+        mode: u=rw,g=r,o=r
     - name: 6. Extract vector binary
       become: true
       ansible.builtin.command:
@@ -60,7 +87,7 @@
         mode: u=rx,g=rx,o=rx
     - name: 9. Restart vector service if configs changed
       become: true
-      when: vector_config['changed']
+      when: vector_config['changed'] or vector_config_syslog_otlp_transform['changed'] or vector_config_nginx_log_access_otlp_transform['changed']
       ansible.builtin.service:
         name: vector
         runlevel: default

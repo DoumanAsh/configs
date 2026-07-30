@@ -39,127 +39,16 @@ transforms:
   # In case of nginx we need to trim out some fluff that is part of message
   syslog_otlp_transform:
     type: remap
+    file: /etc/vector/syslog_otlp_transform.vrl
     inputs:
       - syslog_udp
-    source: |
-      real_timestamp = parse_timestamp!(.timestamp, format: "%Y-%m-%dT%H:%M:%S%z")
-      service_name = .appname
-      severity_text = if includes(["emerg", "err", "crit", "alert"], .severity) {
-        "Error"
-      } else if .severity == "warning" {
-        "Warn"
-      } else if .severity == "debug" {
-        "Debug"
-      } else if includes(["info", "notice"], .severity) {
-        "Info"
-      } else {
-        .severity
-      }
-      body = if service_name == "nginx" {
-        nginx_log = parse_nginx_log!(.message, "error")
-        .kind = "error"
-        .remote_addr = nginx_log.client
-        .pid = nginx_log.pid
-
-        geoip, err = get_enrichment_table_record("GeoIP2-Country", { "ip":  .remote_addr })
-        if err == null {
-          .country = geoip.country.iso_code
-        }
-
-        .host = if nginx_log.server != null {
-          nginx_log.server
-        } else {
-          nginx_log.host
-        }
-        if nginx_log.request != null {
-          nginx_request = split!(nginx_log.request, " ")
-          .method = nginx_request[0]
-          .uri = nginx_request[1]
-        }
-
-        nginx_log.message
-      } else {
-        .message
-      }
-      del(.appname)
-      del(.message)
-      del(.facility)
-      del(.severity)
-      del(.hostname)
-      del(.timestamp)
-
-      attributes = []
-
-      for_each(object!(.)) -> |key, value| {
-        value = if is_integer(value) { { "intValue": value } } else if is_float(value) { { "doubleValue": value } } else { { "stringValue": to_string!(value) } }
-        attributes = append(attributes, [{ "key": key, "value": value }])
-      }
-
-      del(.)
-
-      .resourceLogs = [{
-          "resource": {
-              "attributes": [
-                  { "key": "service.name", "value": { "stringValue": service_name } },
-                  { "key": "source_type", "value": { "stringValue": "syslog" } },
-              ]
-          },
-          "scopeLogs": [{
-              "scope": {
-                  "name": "nginx"
-              },
-              "logRecords": [{
-                  "timeUnixNano": to_unix_timestamp(real_timestamp, unit: "nanoseconds"),
-                  "body": { "stringValue": body },
-                  "severityText": severity_text,
-                  "eventName": "Syslog",
-                  "attributes": attributes
-              }]
-          }]
-      }]
-
 
   # Wrap nginx access logs into OTLP frame
   nginx_log_access_otlp_transform:
     type: remap
+    file: /etc/vector/nginx_log_access_otlp_transform.vrl
     inputs:
       - nginx_log_access
-    source: |
-      payload = object!(parse_json!(.))
-      real_timestamp = parse_timestamp!(payload.timestamp, format: "%Y-%m-%dT%H:%M:%S%:z")
-      del(payload.timestamp)
-
-      geoip, err = get_enrichment_table_record("GeoIP2-Country", { "ip":  payload.remote_addr })
-      if err == null {
-        payload.country = geoip.country.iso_code
-      }
-
-      attributes = []
-      for_each(payload) -> |key, value| {
-        value = if is_integer(value) { { "intValue": value } } else if is_float(value) { { "doubleValue": value } } else { { "stringValue": to_string!(value) } }
-        attributes = append(attributes, [{ "key": key, "value": value }])
-      }
-
-      .resourceLogs = [{
-          "resource": {
-              "attributes": [
-                  { "key": "service.name", "value": { "stringValue": "nginx" } },
-                  { "key": "source_type", "value": { "stringValue": "nginx_log_access" } },
-              ]
-          },
-          "scopeLogs": [{
-              "scope": {
-                  "name": "nginx"
-              },
-              "logRecords": [{
-                  "timeUnixNano": to_unix_timestamp(real_timestamp, unit: "nanoseconds"),
-                  "body": { "stringValue": "Access" },
-                  "severityText": "Info",
-                  "eventName": "NginxAccess",
-                  "attributes": attributes
-              }]
-          }]
-      }]
 
 sinks:
   #stdout:
