@@ -2,6 +2,7 @@
 
 name=tcpbin
 command="/usr/local/bin/tcpbin"
+command_args="--echo-port 49000 --ip-echo-port 49001"
 command_background="yes"
 pidfile="/run/tcpbin.pid"
 
