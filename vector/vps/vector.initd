@@ -1,0 +1,14 @@
+#!/sbin/openrc-run
+
+: ${cfgfile:="/etc/vector/vector.yaml"}
+
+name=vector
+command="/usr/local/bin/vector"
+command_args="-c $cfgfile"
+command_background="yes"
+pidfile="/run/vector.pid"
+
+depend() {
+        need net
+        after firewall
+}

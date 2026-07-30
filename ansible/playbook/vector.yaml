@@ -1,0 +1,67 @@
+- name: Setup vector observability
+  hosts: vps
+  gather_facts: false
+  vars:
+    vector_version: "0.57.0"
+  vars_files:
+    - ../vars/opennobserve.yaml
+
+  tasks:
+    - name: 1. Check if the machine is reachable
+      ansible.builtin.ping:
+    - name: 2. Create vector config directory
+      become: true
+      ansible.builtin.file:
+        path: /etc/vector
+        state: directory
+        owner: root
+        group: root
+    - name: 3. Create vector data directory
+      become: true
+      ansible.builtin.file:
+        path: /var/lib/vector
+        state: directory
+        owner: root
+        group: root
+    - name: 4. Transfer vector.yaml
+      become: true
+      register: vector_config
+      ansible.builtin.template:
+        src: ../../vector/vps/vector.yaml
+        dest: /etc/vector/vector.yaml
+        owner: root
+        group: root
+        mode: u=rw,g=r,o=r
+    # ansible's builtin archiver doesn't support non-GNU tar utilities
+    - name: 5. Download Vector tar.gz
+      ansible.builtin.get_url:
+        url: "https://github.com/vectordotdev/vector/releases/download/v{{vector_version}}/vector-{{vector_version}}-x86_64-unknown-linux-musl.tar.gz"
+        dest: "/tmp/vector-{{vector_version}}-x86_64-unknown-linux-musl.tar.gz"
+        checksum: "sha256:b04fafcffcbeb3d43cbba587583dbe3338b24dd34256b3967fb15d137aff75f2"
+    - name: 6. Extract vector binary
+      become: true
+      ansible.builtin.command:
+        cmd: tar -xzf /tmp/vector-{{vector_version}}-x86_64-unknown-linux-musl.tar.gz --strip-components=3 -C /usr/local/bin ./vector-x86_64-unknown-linux-musl/bin/vector
+        creates: /usr/local/bin/vector
+    - name: 7. Set vector bin permissions
+      become: true
+      ansible.builtin.file:
+        path: /usr/local/bin/vector
+        owner: root
+        group: root
+        mode: u=rx,g=rx,o=rx
+    - name: 8. Transfer vector init.d
+      become: true
+      ansible.builtin.copy:
+        src: ../../vector/vps/vector.initd
+        dest: /etc/init.d/vector
+        owner: root
+        group: root
+        mode: u=rx,g=rx,o=rx
+    - name: 9. Restart vector service if configs changed
+      become: true
+      when: vector_config['changed']
+      ansible.builtin.service:
+        name: vector
+        runlevel: default
+        state: restarted
