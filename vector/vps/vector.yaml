@@ -86,6 +86,7 @@ transforms:
       del(.facility)
       del(.severity)
       del(.hostname)
+      del(.timestamp)
 
       attributes = []
 
