@@ -9,22 +9,43 @@
   tasks:
     - name: 1. Check if the machine is reachable
       ansible.builtin.ping:
-    - name: 2. Create vector config directory
-      become: true
-      ansible.builtin.file:
-        path: /etc/vector
-        state: directory
-        owner: root
-        group: root
-        mode: u=rwx,g=rx,o=rx
-    - name: 2.1 Setup geolite2
+    - name: Prepare vector config
       block:
-        - name: "Task maxmind-updater"
-          ansible.builtin.include_tasks: ../tasks/maxmind-updater.yaml
-          vars:
-            is_become: true
-            user: root
-            dest_folder: "/opt/geolite2"
+        - name: 2 Create vector config directory
+          become: true
+          ansible.builtin.file:
+            path: /etc/vector
+            state: directory
+            owner: root
+            group: root
+            mode: u=rwx,g=rx,o=rx
+        - name: 2.1 Transfer vector.yaml
+          become: true
+          register: vector_config
+          ansible.builtin.template:
+            src: ../../vector/vps/vector.yaml
+            dest: /etc/vector/vector.yaml
+            owner: root
+            group: root
+            mode: u=rw,g=r,o=r
+        - name: 2.2 Transfer syslog_otlp_transform.vrl
+          become: true
+          register: vector_config_syslog_otlp_transform
+          ansible.builtin.copy:
+            src: ../../vector/vps/syslog_otlp_transform.vrl
+            dest: /etc/vector/syslog_otlp_transform.vrl
+            owner: root
+            group: root
+            mode: u=rw,g=r,o=r
+        - name: 2.3 Transfer nginx_log_access_otlp_transform.vrl
+          become: true
+          register: vector_config_nginx_log_access_otlp_transform
+          ansible.builtin.copy:
+            src: ../../vector/vps/nginx_log_access_otlp_transform.vrl
+            dest: /etc/vector/nginx_log_access_otlp_transform.vrl
+            owner: root
+            group: root
+            mode: u=rw,g=r,o=r
     - name: 3. Create vector data directory
       become: true
       ansible.builtin.file:
@@ -33,61 +54,44 @@
         owner: root
         group: root
         mode: u=rwx,g=rx,o=rx
-    - name: 4. Transfer vector.yaml
-      become: true
-      register: vector_config
-      ansible.builtin.template:
-        src: ../../vector/vps/vector.yaml
-        dest: /etc/vector/vector.yaml
-        owner: root
-        group: root
-        mode: u=rw,g=r,o=r
-    - name: 4.1 Transfer syslog_otlp_transform.vrl
-      become: true
-      register: vector_config_syslog_otlp_transform
-      ansible.builtin.copy:
-        src: ../../vector/vps/syslog_otlp_transform.vrl
-        dest: /etc/vector/syslog_otlp_transform.vrl
-        owner: root
-        group: root
-        mode: u=rw,g=r,o=r
-    - name: 4.2 Transfer nginx_log_access_otlp_transform.vrl
-      become: true
-      register: vector_config_nginx_log_access_otlp_transform
-      ansible.builtin.copy:
-        src: ../../vector/vps/nginx_log_access_otlp_transform.vrl
-        dest: /etc/vector/nginx_log_access_otlp_transform.vrl
-        owner: root
-        group: root
-        mode: u=rw,g=r,o=r
-    - name: 5. Download Vector tar.gz
-      ansible.builtin.get_url:
-        url: "https://github.com/vectordotdev/vector/releases/download/v{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
-        dest: "/tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
-        checksum: "sha256:b04fafcffcbeb3d43cbba587583dbe3338b24dd34256b3967fb15d137aff75f2"
-        mode: u=rw,g=r,o=r
-    # ansible's builtin archiver doesn't support non-GNU tar utilities so we use raw tar on Alpine
-    - name: 6. Extract vector binary
-      become: true
-      ansible.builtin.command:
-        cmd: "tar -xzf /tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz --strip-components=3 -C /usr/local/bin ./vector-x86_64-unknown-linux-musl/bin/vector" # noqa: command-instead-of-module
-        creates: /usr/local/bin/vector
-    - name: 7. Set vector bin permissions
-      become: true
-      ansible.builtin.file:
-        path: /usr/local/bin/vector
-        owner: root
-        group: root
-        mode: u=rx,g=rx,o=rx
-    - name: 8. Transfer vector init.d
-      become: true
-      ansible.builtin.copy:
-        src: ../../vector/vps/vector.initd
-        dest: /etc/init.d/vector
-        owner: root
-        group: root
-        mode: u=rx,g=rx,o=rx
-    - name: 9. Restart vector service if configs changed
+    - name: Install geolite2 database
+      block:
+        - name: 4. Setup maxmind-updater
+          ansible.builtin.include_tasks: ../tasks/maxmind-updater.yaml
+          vars:
+            is_become: true
+            user: root
+            dest_folder: "/opt/geolite2"
+    - name: Install Vector
+      block:
+        - name: 5. Download Vector tar.gz
+          ansible.builtin.get_url:
+            url: "https://github.com/vectordotdev/vector/releases/download/v{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
+            dest: "/tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
+            checksum: "sha256:b04fafcffcbeb3d43cbba587583dbe3338b24dd34256b3967fb15d137aff75f2"
+            mode: u=rw,g=r,o=r
+        # ansible's builtin archiver doesn't support non-GNU tar utilities so we use raw tar on Alpine
+        - name: 5.1 Extract vector binary
+          become: true
+          ansible.builtin.command:
+            cmd: "tar -xzf /tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz --strip-components=3 -C /usr/local/bin ./vector-x86_64-unknown-linux-musl/bin/vector" # noqa: command-instead-of-module
+            creates: /usr/local/bin/vector
+        - name: 5.2 Set vector bin permissions
+          become: true
+          ansible.builtin.file:
+            path: /usr/local/bin/vector
+            owner: root
+            group: root
+            mode: u=rx,g=rx,o=rx
+        - name: 5.3 Transfer vector init.d
+          become: true
+          ansible.builtin.copy:
+            src: ../../vector/vps/vector.initd
+            dest: /etc/init.d/vector
+            owner: root
+            group: root
+            mode: u=rx,g=rx,o=rx
+    - name: 6. Restart vector service if configs changed
       become: true
       when: vector_config['changed'] or vector_config_syslog_otlp_transform['changed'] or vector_config_nginx_log_access_otlp_transform['changed']
       ansible.builtin.service:
