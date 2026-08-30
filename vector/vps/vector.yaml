@@ -45,6 +45,13 @@ transforms:
     file: /etc/vector/syslog_otlp_transform.vrl
     inputs:
       - syslog_udp
+  # Cleanup metrics metadata
+  metrics_otlp_transform:
+    type: remap
+    file: /etc/vector/metrics_otlp_transform.vrl
+    inputs:
+      - host_metrics
+      - nginx_metrics
 
   # Wrap nginx access logs into OTLP frame
   nginx_log_access_otlp_transform:
@@ -80,7 +87,7 @@ sinks:
   otlp_metrics:
     type: opentelemetry
     inputs:
-      - "*_metrics"
+      - metrics_otlp_transform
     protocol:
       uri: "http://localhost:45080/_observe/api/default/v1/metrics"
       method: post

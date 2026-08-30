@@ -46,6 +46,16 @@
             owner: root
             group: root
             mode: u=rw,g=r,o=r
+        - name: 2.4 Transfer metrics_otlp_transform.vrl
+          become: true
+          register: vector_config_metrics_otlp_transform
+          ansible.builtin.copy:
+            src: ../../vector/vps/metrics_otlp_transform.vrl
+            dest: /etc/vector/metrics_otlp_transform.vrl
+            owner: root
+            group: root
+            mode: u=rw,g=r,o=r
+
     - name: 3. Create vector data directory
       become: true
       ansible.builtin.file:
@@ -93,7 +103,7 @@
             mode: u=rx,g=rx,o=rx
     - name: 6. Restart vector service if configs changed
       become: true
-      when: vector_config['changed'] or vector_config_syslog_otlp_transform['changed'] or vector_config_nginx_log_access_otlp_transform['changed']
+      when: vector_config['changed'] or vector_config_syslog_otlp_transform['changed'] or vector_config_nginx_log_access_otlp_transform['changed'] or vector_config_metrics_otlp_transform['changed']
       ansible.builtin.service:
         name: vector
         runlevel: default
