@@ -13,22 +13,20 @@ enrichment_tables:
      type: mmdb
 
 sources:
-  #TODO: host_metrics requires conversion into OTLP format
-  #Long PR standing to fix it: https://github.com/vectordotdev/vector/pull/24897
-  #host_metrics:
-  #  type: host_metrics
-  #  scrape_interval_secs: 10
-  #  collectors:
-  #    - cpu
-  #    - disk
-  #    - memory
-  #    - network
-  #    - load
-  #nginx_metrics:
-  #  type: nginx_metrics
-  #  scrape_interval_secs: 10
-  #  endpoints:
-  #    - http://127.0.0.1:56001/
+  host_metrics:
+    type: host_metrics
+    scrape_interval_secs: 10
+    collectors:
+      - cpu
+      - disk
+      - memory
+      - network
+      - load
+  nginx_metrics:
+    type: nginx_metrics
+    scrape_interval_secs: 10
+    endpoints:
+      - http://127.0.0.1:56001/
   syslog_udp:
     type: syslog
     address: 127.0.0.1:51400
@@ -79,18 +77,18 @@ sinks:
           stream-name: "vector"
       encoding:
         codec: otlp
-  #otlp_metrics:
-  #  type: opentelemetry
-  #  inputs:
-  #    - "*_metrics"
-  #  protocol:
-  #    uri: "http://localhost:45080/_observe/api/default/v1/metrics"
-  #    method: post
-  #    type: http
-  #    request:
-  #      headers:
-  #        Authorization: "Basic {{ openobserve.token }}"
-  #        organization: "default"
-  #        stream-name: "vector"
-  #    encoding:
-  #      codec: otlp
+  otlp_metrics:
+    type: opentelemetry
+    inputs:
+      - "*_metrics"
+    protocol:
+      uri: "http://localhost:45080/_observe/api/default/v1/metrics"
+      method: post
+      type: http
+      request:
+        headers:
+          Authorization: "Basic {{ openobserve.token }}"
+          organization: "default"
+          stream-name: "vector"
+      encoding:
+        codec: otlp
