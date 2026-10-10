@@ -2,7 +2,7 @@
   hosts: vps
   gather_facts: false
   vars:
-    vector_version: "0.58.0"
+    vector_version: "0.59.0"
   vars_files:
     - ../vars/opennobserve.yaml
 
@@ -56,6 +56,13 @@
             group: root
             mode: u=rw,g=r,o=r
 
+    - name: 2. Stop vector service
+      become: true
+      ansible.builtin.service:
+        name: vector
+        runlevel: default
+        state: stopped
+
     - name: 3. Create vector data directory
       become: true
       ansible.builtin.file:
@@ -78,7 +85,7 @@
           ansible.builtin.get_url:
             url: "https://github.com/vectordotdev/vector/releases/download/v{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
             dest: "/tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
-            checksum: "sha256:ad013ddc164b80e425cc403d2174e26b811673846d1125c80bc7b5024826ce39"
+            checksum: "sha256:a8dbc43c18ae25d0b23a712c9262f3aad904e352b1db5e7db1d9c4aecab59496"
             mode: u=rw,g=r,o=r
         # ansible's builtin archiver doesn't support non-GNU tar utilities so we use raw tar on Alpine
         - name: 5.1 Extract vector binary
@@ -101,10 +108,9 @@
             owner: root
             group: root
             mode: u=rx,g=rx,o=rx
-    - name: 6. Restart vector service if configs changed
+    - name: 6. Start vector service
       become: true
-      when: vector_config['changed'] or vector_config_syslog_otlp_transform['changed'] or vector_config_nginx_log_access_otlp_transform['changed'] or vector_config_metrics_otlp_transform['changed']
       ansible.builtin.service:
         name: vector
         runlevel: default
-        state: restarted
+        state: started
