@@ -2,7 +2,7 @@
   hosts: vps
   gather_facts: false
   vars:
-    vector_version: "0.60.0"
+    vector_version: "0.61.0"
   vars_files:
     - ../vars/opennobserve.yaml
 
@@ -85,13 +85,13 @@
           ansible.builtin.get_url:
             url: "https://github.com/vectordotdev/vector/releases/download/v{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
             dest: "/tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
-            checksum: "sha256:9584f402e67fea7ff2dd846f0a8bbb56fa32951bded11749093ff3780e1513cf"
+            checksum: "sha256:e1609b8a55ef1c1fc4fd88633e2bc6366e9a4022f6f1ae846cadd27af5237621"
             mode: u=rw,g=r,o=r
         # ansible's builtin archiver doesn't support non-GNU tar utilities so we use raw tar on Alpine
         - name: 5.1 Extract vector binary
           become: true
           ansible.builtin.command:
-            cmd: "tar -xzf /tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz --strip-components=3 -C /usr/local/bin ./vector-x86_64-unknown-linux-musl/bin/vector" # noqa: command-instead-of-module
+            cmd: "sudo tar -xzf /tmp/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz --strip-components=3 -C /usr/local/bin ./vector-x86_64-unknown-linux-musl/bin/vector"
             creates: /usr/local/bin/vector
         - name: 5.2 Set vector bin permissions
           become: true

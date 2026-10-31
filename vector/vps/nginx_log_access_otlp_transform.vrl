@@ -7,6 +7,7 @@ if err == null {
     payload.country = geoip.country.iso_code
 }
 
+time_unix_nano = to_unix_timestamp!(real_timestamp, unit: "nanoseconds")
 attributes = []
 for_each(payload) -> |key, value| {
     value = if is_integer(value) { { "intValue": value } } else if is_float(value) { { "doubleValue": value } } else { { "stringValue": to_string!(value) } }
@@ -25,7 +26,7 @@ for_each(payload) -> |key, value| {
             "name": "nginx"
         },
         "logRecords": [{
-            "timeUnixNano": to_unix_timestamp(real_timestamp, unit: "nanoseconds"),
+            "timeUnixNano": time_unix_nano,
             "body": { "stringValue": "Access" },
             "severityText": "Info",
             "eventName": "NginxAccess",

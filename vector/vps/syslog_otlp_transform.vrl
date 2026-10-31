@@ -45,6 +45,7 @@ del(.severity)
 del(.hostname)
 del(.timestamp)
 
+time_unix_nano = to_unix_timestamp!(real_timestamp, unit: "nanoseconds")
 attributes = []
 
 for_each(object!(.)) -> |key, value| {
@@ -66,7 +67,7 @@ del(.)
             "name": "nginx"
         },
         "logRecords": [{
-            "timeUnixNano": to_unix_timestamp(real_timestamp, unit: "nanoseconds"),
+            "timeUnixNano": time_unix_nano,
             "body": { "stringValue": body },
             "severityText": severity_text,
             "eventName": "Syslog",
