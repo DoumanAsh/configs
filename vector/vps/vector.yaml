@@ -22,6 +22,7 @@ sources:
       - memory
       - network
       - load
+      - host
   nginx_metrics:
     type: nginx_metrics
     scrape_interval_secs: 10
